@@ -1,1 +1,1 @@
-FreeRTOSv1011_AArch64_RaspberryPi3Bplus.git is a project which porting the FreeRTOSv1011 to AArch64 mode on RaspberryPi3Bplus.
+FreeRTOSv1011 on AArch64 mode RaspberryPi3Bplus.
