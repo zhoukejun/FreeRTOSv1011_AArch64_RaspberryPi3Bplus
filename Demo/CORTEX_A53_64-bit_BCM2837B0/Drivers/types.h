@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef TYPES_H_
+#define TYPES_H_
 
 #ifndef TRUE
 #  define TRUE          1U
@@ -19,5 +19,4 @@ typedef unsigned int	uint32_t;
 typedef int		int32_t;
 
 
-#endif /* end of protection macro */
-
+#endif /* TYPES_H_ */
