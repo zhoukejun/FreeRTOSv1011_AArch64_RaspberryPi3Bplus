@@ -7,7 +7,7 @@
 
 
 //-------------------------------------------------------------------
-void uart_send ( unsigned int c )
+void bcm_uart_send ( unsigned int c )
 {
 	while(1)
 	{
@@ -17,7 +17,7 @@ void uart_send ( unsigned int c )
 	iowrite32(c, AUX_MU_IO_REG);
 }
 //-------------------------------------------------------------------
-void uart_flush ( void )
+void bcm_uart_flush ( void )
 {
 	while(1)
 	{
@@ -32,39 +32,40 @@ void hexstrings ( unsigned int d )
     unsigned int rb;
     unsigned int rc;
 
-    rb=32;
-    while(1)
-    {
-        rb-=4;
-        rc=(d >> rb) & 0xF;
-        if(rc > 9)
+	rb=32;
+	while(1)
+	{
+	    rb -= 4;
+	    rc = (d >> rb) & 0xF;
+	    if (rc > 9)
 		rc += 0x37;
-       	else rc+=0x30;
-        	uart_send(rc);
-        if(rb==0) break;
-    }
-    uart_send(0x20);
+		else rc += 0x30;
+		bcm_uart_send(rc);
+	    if (rb==0)
+		   break;
+	}
+	bcm_uart_send(0x20);
 }
 //-------------------------------------------------------------------
 void hexstring ( unsigned int d )
 {
-    hexstrings(d);
-    uart_send(0x0D);
-    uart_send(0x0A);
+	hexstrings(d);
+	bcm_uart_send(0x0D);
+	bcm_uart_send(0x0A);
 }
 
 void print( char* ch)
 {
 	while (*ch!=0)
 	{
-		uart_send((unsigned int)*ch);
+		bcm_uart_send((unsigned int)*ch);
 		ch++;
 	}
-	uart_send(0x0D);
-	uart_send(0x0A);
+	bcm_uart_send(0x0D);
+	bcm_uart_send(0x0A);
 }
 //-------------------------------------------------------------------
-void uart_init ( void )
+void bcm_uart_init ( void )
 {
 	unsigned int ra;
 
