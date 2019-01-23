@@ -37,7 +37,7 @@ void bcm_arm_timer_free_running_counter_set(uint32_t fr_cnt)
 
 void bcm_arm_timer_start_running()
 {
-	iowrite32(((0x1 << 9) | (0x1 << 7) | (0x1 << 5)) | ioread32(ARM_TIMER_CTRL), ARM_TIMER_CTRL);
+	iowrite32(((0x1 << 9) | (0x1 << 7) | (0x1 << 5) | (0x1 << 1)) | ioread32(ARM_TIMER_CTRL), ARM_TIMER_CTRL);
 }
 
 void bcm_arm_timer_clear_irq()
