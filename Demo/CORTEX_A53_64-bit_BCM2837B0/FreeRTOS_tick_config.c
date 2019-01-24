@@ -52,6 +52,7 @@ void vClearTickInterrupt( void )
 	bcm_arm_timer_clear_irq();
 
 }
+
 void vApplicationIRQHandler( uint32_t ulICCIAR )
 {
 	bcm_irq_Handler();
