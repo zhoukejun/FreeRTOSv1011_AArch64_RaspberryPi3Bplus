@@ -102,3 +102,11 @@ void SErrorInterrupt(void)
 }
 
 
+void FreeRTOS_Abort_Handler(uint32_t X0, uint32_t X1)
+{
+	print("FreeRTOS_Abort_Handler()");
+	print("ELR_EL3 is:");
+	hexstring(X0);
+	print("Exception class code is:");
+	hexstring(X1);
+}
