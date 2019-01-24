@@ -87,14 +87,13 @@ InitEL3:
 
 	/* Configure SCR_EL3 */
 	mov	w1, wzr
-//	orr	w1, w1, #(1 << 11)	//; Set ST bit (Secure EL1 can access CNTPS_TVAL_EL1, CNTPS_CTL_EL1 & CNTPS_CVAL_EL1)
-//	orr	w1, w1, #(1 << 10)	//; Set RW bit (EL1 is AArch64, as this is the secure world)
+	orr	w1, w1, #(1 << 11)	//; Set ST bit (Secure EL1 can access CNTPS_TVAL_EL1, CNTPS_CTL_EL1 & CNTPS_CVAL_EL1)
+	orr	w1, w1, #(1 << 10)	//; Set RW bit (EL1 is AArch64, as this is the secure world)
 	orr	w1, w1, #(1 << 3)	//; Set EA bit (SError routed to EL3) 
 	orr	w1, w1, #(1 << 2)	//; Set FIQ bit (FIQs routed to EL3) 
 	orr	w1, w1, #(1 << 1)	//; Set IRQ bit (IRQs routed to EL3) 
 	bic	x1, x1, #1
 	msr	SCR_EL3, x1
-	msr	daifclr, #2
 
 	/* ARM Errata 855873 */
 	mrs	x0, MIDR_EL1
