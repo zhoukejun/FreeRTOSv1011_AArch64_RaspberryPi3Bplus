@@ -35,8 +35,23 @@
 #include "Drivers/led.h"
 #include "Drivers/arm_timer.h"
 
+/*
+ * Configure the hardware as necessary to run this demo.
+ */
+
+static void prvSetupHardware( void )
+{
+	/* Ensure no interrupts execute while the scheduler is in an inconsistent
+	state.  Interrupts are automatically enabled when the scheduler is
+	started. */
+	portDISABLE_INTERRUPTS();
+}
+/*-----------------------------------------------------------*/
+
+
 void vApplicationMallocFailedHook( void )
 {
+	print("vApplicationMallocFailedHook()");
 	/* Called if a call to pvPortMalloc() fails because there is insufficient
 	free memory available in the FreeRTOS heap.  pvPortMalloc() is called
 	internally by FreeRTOS API functions that create tasks, queues, software
@@ -48,6 +63,7 @@ void vApplicationMallocFailedHook( void )
 
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 {
+	print("vApplicationStackOverflowHook()");
 	( void ) pcTaskName;
 	( void ) pxTask;
 
@@ -60,6 +76,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 
 void vApplicationIdleHook( void )
 {
+//	print("vApplicationIdleHook()");
 	volatile size_t xFreeHeapSpace;
 
 	/* This is just a trivial example of an idle hook.  It is called on each
@@ -77,6 +94,7 @@ void vApplicationIdleHook( void )
 
 void vApplicationTickHook( void )
 {
+	print("vApplicationTickHook()");
 	#if( mainSELECTED_APPLICATION == 1 )
 	{
 		/* Only the comprehensive demo actually uses the tick hook. */
@@ -136,29 +154,35 @@ void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, Stack
 
 void vMainAssertCalled( const char *pcFileName, uint32_t ulLineNumber )
 {
+//	print( "ASSERT!  Line %lu of file %s\r\n", ulLineNumber, pcFileName );
+        print( "vMainAssertCalled ASSERT!  Line "); hexstring(ulLineNumber);
+	print("of file: "); print(pcFileName);
+	print("++++++end---");
         taskENTER_CRITICAL();
         for( ;; );
 }
 
 void task1(void *pParam)
 {
+	print(" task1 -----addr is:------->");
+	hexstring(task1);
 	while(1) 
 	{
-		led(1);
-		vTaskDelay(1000);
-		led(0);
-		vTaskDelay(1000);
-		print(" task 1 run ");
+		print(" task 1 run ------->");
+//		led(1);
+		vTaskDelay(5);
+///		led(0);
+//		vTaskDelay(1000);
 	}
 }
 
 void task2(void *pParam)
 {
-	print(" task2 ");
+	print(" task2 ------------>");
 	while(1) 
 	{
-		vTaskDelay(2000);
-		print(" task2 run ");
+		vTaskDelay(5);
+		print(" task2 run -----------<");
 	}
 }
 
@@ -172,16 +196,23 @@ void main (void)
 {
 	/* Configure the hardware ready to run the demo. */
 
-	uart_init();
+	prvSetupHardware();
+	bcm_uart_init();
 
-	print ("FreeRTOS: uart_init() done!\n");
+	print ("FreeRTOS: bcm_uart_init() done!\n");
+	print ("============================FreeRTOS======================\n");
+	print ("============================AArch64=======================\n");
+	print ("============================Start=========================\n");
 
-	led(1);
+//	led(1);
 
-	xTaskCreate(task1, "LED_0", 128, NULL, 0, NULL);
+	print(" task1 -----addr is:");
+	hexstring(task1);
+
+	xTaskCreate(task1, "LED_0", configMINIMAL_STACK_SIZE, NULL, 0, NULL);
 	print ("FreeRTOS: Created task1!\n");
 
-	xTaskCreate(task2, "LED_1", 128, NULL, 0, NULL);
+	xTaskCreate(task2, "LED_1", configMINIMAL_STACK_SIZE, NULL, 0, NULL);
 	print ("FreeRTOS: Created task2!\n");
 
 	vTaskStartScheduler();
