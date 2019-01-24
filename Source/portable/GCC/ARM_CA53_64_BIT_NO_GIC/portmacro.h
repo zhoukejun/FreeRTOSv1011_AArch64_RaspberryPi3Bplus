@@ -109,31 +109,15 @@ extern void vPortInstallFreeRTOSVectorTable( void );
 globally enable and disable interrupts. */
 #define portENTER_CRITICAL()		vPortEnterCritical();
 #define portEXIT_CRITICAL()			vPortExitCritical();
-#define portDISABLE_INTERRUPTS()									\
-	__asm volatile ( "MSR DAIFSET, #2" ::: "memory" );				\
-	__asm volatile ( "DSB SY" );									\
+#define portDISABLE_INTERRUPTS()	\
+	__asm volatile ( "MSR DAIFSET, #2" ::: "memory" );	\
+	__asm volatile ( "DSB SY" );				\
 	__asm volatile ( "ISB SY" );
 
-#define portENABLE_INTERRUPTS()										\
-	__asm volatile ( "MSR DAIFCLR, #2" ::: "memory" );				\
-	__asm volatile ( "DSB SY" );									\
+#define portENABLE_INTERRUPTS()		\
+	__asm volatile ( "MSR DAIFCLR, #2" ::: "memory" );	\
+	__asm volatile ( "DSB SY" );				\
 	__asm volatile ( "ISB SY" );
-
-
-__attribute__( ( always_inline ) ) static __inline uint32_t portINLINE_SET_INTERRUPT_MASK_FROM_ISR( void )
-{
-	uint32_t ulMaskBits;
-
-	__asm volatile( "mrs %0, daif" : "=r"( ulMaskBits ) :: "memory" );
-
-	configASSERT( ( ulMaskBits & portDAIF_I ) != 0 );
-	ulMaskBits &= portDAIF_I;
-	portDISABLE_INTERRUPTS();
-	return ulMaskBits;
-}
-
-#define portSET_INTERRUPT_MASK_FROM_ISR() portINLINE_SET_INTERRUPT_MASK_FROM_ISR()
-#define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	if( x == portDAIF_I) portENABLE_INTERRUPTS()
 
 /*-----------------------------------------------------------*/
 
