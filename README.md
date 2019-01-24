@@ -16,17 +16,17 @@ config.txt is showing below.
 
 ====================
 
- # ARMv8
+ #ARMv8
  arm_control=0x200
 
- # Uart
+ #Uart
  enable_uart=1
 
- # 1: Load at address 0x0
- # 0: Load at address 0x80000
+ #1: Load at address 0x0
+ #0: Load at address 0x80000
  kernel_old=1
 
- # Kernel name
+ #Kernel name
  kernel=kernel.img
 
 ====================
