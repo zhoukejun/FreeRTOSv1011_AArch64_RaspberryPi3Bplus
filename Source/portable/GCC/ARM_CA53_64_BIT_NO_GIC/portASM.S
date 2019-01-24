@@ -28,7 +28,6 @@
 	.text
 
 	/* Variables and functions. */
-	.extern ullMaxAPIPriorityMask
 	.extern pxCurrentTCB
 	.extern vTaskSwitchContext
 	.extern vApplicationIRQHandler
@@ -36,14 +35,13 @@
 	.extern ullPortTaskHasFPUContext
 	.extern ullCriticalNesting
 	.extern ullPortYieldRequired
-	.extern ullICCEOIR
-	.extern ullICCIAR
 	.extern _freertos_vector_table
 
 	.global FreeRTOS_IRQ_Handler
 	.global FreeRTOS_SWI_Handler
 	.global vPortRestoreTaskContext
 
+	.global FreeRTOS_Abort_Handler
 
 .macro portSAVE_CONTEXT
 
@@ -139,8 +137,8 @@
 
 	/* Set the PMR register to be correct for the current critical nesting
 	depth. */
-	LDR	X0, ullCriticalNestingConst /* X0 holds the address of ullCriticalNesting. */
-	STR	X3, [X0]					/* Restore the task's critical nesting count. */
+	LDR	X0, ullCriticalNestingConst	/* X0 holds the address of ullCriticalNesting. */
+	STR	X3, [X0]		/* Restore the task's critical nesting count. */
 
 	/* Restore the FPU context indicator. */
 	LDR	X0, ullPortTaskHasFPUContextConst
@@ -166,7 +164,7 @@
 	LDP	Q2, Q3, [SP], #0x20
 	LDP	Q0, Q1, [SP], #0x20
 1:
-	LDP 	X2, X3, [SP], #0x10  /* SPSR and ELR. */
+	LDP 	X2, X3, [SP], #0x10	/* SPSR and ELR. */
 
 #if defined( GUEST )
 	/* Restore the SPSR. */
@@ -232,7 +230,9 @@ FreeRTOS_SWI_Handler:
 	portRESTORE_CONTEXT
 
 FreeRTOS_Abort:
-	/* Full ESR is in X0, exception class code is in X1. */
+	/* Full ELR_EL3 is in X0, exception class code is in X1. */
+	MRS	X0, ELR_EL3
+	BL	FreeRTOS_Abort_Handler
 	B	.
 
 /******************************************************************************
@@ -274,7 +274,12 @@ FreeRTOS_IRQ_Handler:
 	STP	X14, X15, [SP, #-0x10]!
 	STP	X16, X17, [SP, #-0x10]!
 	STP	X18, X19, [SP, #-0x10]!
-	STP	X29, X30, [SP, #-0x10]!
+	STP	X20, X21, [SP, #-0x10]!
+	STP	X22, X23, [SP, #-0x10]!
+	STP	X24, X25, [SP, #-0x10]!
+	STP	X26, X27, [SP, #-0x10]!
+	STP	X28, X29, [SP, #-0x10]!
+	STP	X30, XZR, [SP, #-0x10]!
 
 	/* Save the SPSR and ELR. */
 #if defined( GUEST )
@@ -284,7 +289,7 @@ FreeRTOS_IRQ_Handler:
 	MRS	X3, SPSR_EL3
 	MRS	X2, ELR_EL3
 #endif
-	STP 	X2, X3, [SP, #-0x10]!
+	STP	X2, X3, [SP, #-0x10]!
 
 	/* Increment the interrupt nesting counter. */
 	LDR	X5, ullPortInterruptNestingConst
@@ -295,7 +300,6 @@ FreeRTOS_IRQ_Handler:
 	/* Maintain the interrupt nesting information across the function call. */
 	STP	X1, X5, [SP, #-0x10]!
 
-
 	/* Call the C handler. */
 	BL vApplicationIRQHandler
 
@@ -304,13 +308,12 @@ FreeRTOS_IRQ_Handler:
 	DSB	SY
 	ISB	SY
 
-
 	/* Restore the critical nesting count. */
 	LDP	X1, X5, [SP], #0x10
 	STR	X1, [X5]
 
 	/* Has interrupt nesting unwound? */
-	CMP		X1, #0
+	CMP	X1, #0
 	B.NE	Exit_IRQ_No_Context_Switch
 
 	/* Is a context switch required? */
@@ -324,7 +327,7 @@ FreeRTOS_IRQ_Handler:
 	STR	X2, [X0]
 
 	/* Restore volatile registers. */
-	LDP 	X4, X5, [SP], #0x10  /* SPSR and ELR. */
+	LDP	X4, X5, [SP], #0x10  /* SPSR and ELR. */
 #if defined( GUEST )
 	MSR	SPSR_EL1, X5
 	MSR	ELR_EL1, X4
@@ -335,7 +338,12 @@ FreeRTOS_IRQ_Handler:
 	DSB	SY
 	ISB	SY
 
-	LDP	X29, X30, [SP], #0x10
+	LDP	X30, XZR, [SP], #0x10
+	LDP	X28, X29, [SP], #0x10
+	LDP	X26, X27, [SP], #0x10
+	LDP	X24, X25, [SP], #0x10
+	LDP	X22, X23, [SP], #0x10
+	LDP	X20, X21, [SP], #0x10
 	LDP	X18, X19, [SP], #0x10
 	LDP	X16, X17, [SP], #0x10
 	LDP	X14, X15, [SP], #0x10
@@ -354,7 +362,7 @@ FreeRTOS_IRQ_Handler:
 
 Exit_IRQ_No_Context_Switch:
 	/* Restore volatile registers. */
-	LDP 	X4, X5, [SP], #0x10  /* SPSR and ELR. */
+	LDP	X4, X5, [SP], #0x10  /* SPSR and ELR. */
 #if defined( GUEST )
 	MSR	SPSR_EL1, X5
 	MSR	ELR_EL1, X4
@@ -365,7 +373,12 @@ Exit_IRQ_No_Context_Switch:
 	DSB	SY
 	ISB	SY
 
-	LDP	X29, X30, [SP], #0x10
+	LDP	X30, XZR, [SP], #0x10
+	LDP	X28, X29, [SP], #0x10
+	LDP	X26, X27, [SP], #0x10
+	LDP	X24, X25, [SP], #0x10
+	LDP	X22, X23, [SP], #0x10
+	LDP	X20, X21, [SP], #0x10
 	LDP	X18, X19, [SP], #0x10
 	LDP	X16, X17, [SP], #0x10
 	LDP	X14, X15, [SP], #0x10
@@ -382,20 +395,14 @@ Exit_IRQ_No_Context_Switch:
 
 
 
+vApplicationIRQHandlerConst: .word vApplicationIRQHandler
+
 .align 8
 pxCurrentTCBConst: .dword pxCurrentTCB
 ullCriticalNestingConst: .dword ullCriticalNesting
-ullPortTaskHasFPUContextConst: .dword ullPortTaskHasFPUContext
-
-vApplicationIRQHandlerConst: .word vApplicationIRQHandler
 ullPortInterruptNestingConst: .dword ullPortInterruptNesting
+ullPortTaskHasFPUContextConst: .dword ullPortTaskHasFPUContext
 ullPortYieldRequiredConst: .dword ullPortYieldRequired
 
-
-
 .end
-
-
-
-
 
