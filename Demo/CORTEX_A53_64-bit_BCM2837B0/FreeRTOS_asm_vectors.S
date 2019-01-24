@@ -23,11 +23,21 @@
 	stp	X14,X15, [sp,#-0x10]!
 	stp	X16,X17, [sp,#-0x10]!
 	stp 	X18,X19, [sp,#-0x10]!
-	stp 	X29,X30, [sp,#-0x10]!
+	stp	X20,X21, [sp,#-0x10]!
+	stp	X22,X23, [sp,#-0x10]!
+	stp	X24,X25, [sp,#-0x10]!
+	stp	X26,X27, [sp,#-0x10]!
+	stp 	X28,X29, [sp,#-0x10]!
+	stp 	X30,XZR, [sp,#-0x10]!
 .endm
 
 .macro restoreregister
-	ldp 	X29,X30, [sp], #0x10
+	ldp 	X30,XZR, [sp], #0x10
+	ldp 	X28,X29, [sp], #0x10
+	ldp	X26,X27, [sp], #0x10
+	ldp	X24,X25, [sp], #0x10
+	ldp	X22,X23, [sp], #0x10
+	ldp	X20,X21, [sp], #0x10
 	ldp 	X18,X19, [sp], #0x10
 	ldp	X16,X17, [sp], #0x10
 	ldp	X14,X15, [sp], #0x10
@@ -119,7 +129,6 @@ _vector_table:
 .org (VBAR + 0x180)
 	b	.
 
-
 .org (VBAR + 0x200)
 	b	SynchronousInterruptHandler
 
@@ -131,8 +140,6 @@ _vector_table:
 
 .org (VBAR + 0x380)
 	b	SErrorInterruptHandler
-
-
 
 .org (VBAR + 0x400)
 	b	.
@@ -157,8 +164,6 @@ _vector_table:
 
 .org (VBAR + 0x780)
 	b	.
-
-
 
 /******************************************************************************
  * Vector table to use when FreeRTOS is running.
