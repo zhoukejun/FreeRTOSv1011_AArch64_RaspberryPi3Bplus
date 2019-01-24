@@ -70,20 +70,20 @@
 #define configUSE_TICKLESS_IDLE			0
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configUSE_PREEMPTION			1
-#define configUSE_IDLE_HOOK			0
+#define configUSE_IDLE_HOOK			1
 #define configUSE_TICK_HOOK			0
 #define configMAX_PRIORITIES			( 5 )
-#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 128 )
-#define configTOTAL_HEAP_SIZE			(( size_t) (4096) )
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 200 )
+#define configTOTAL_HEAP_SIZE			(( size_t) (0x20000) )
 #define configMAX_TASK_NAME_LEN			( 16 )
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			1
-#define configUSE_MUTEXES			1
+#define configUSE_MUTEXES			0
 #define configQUEUE_REGISTRY_SIZE		8
 #define configCHECK_FOR_STACK_OVERFLOW		2
-#define configUSE_RECURSIVE_MUTEXES		1
+#define configUSE_RECURSIVE_MUTEXES		0
 #define configUSE_MALLOC_FAILED_HOOK		1
-#define configUSE_APPLICATION_TASK_TAG		0
+#define configUSE_APPLICATION_TASK_TAG		1
 #define configUSE_COUNTING_SEMAPHORES		0
 #define configUSE_QUEUE_SETS			0
 
@@ -94,11 +94,6 @@
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 			0
 #define configMAX_CO_ROUTINE_PRIORITIES		( 2 )
-
-/* Interrupt priorities definitions (ARM Cortex-A specific) */
-#define configINTERRUPT_CONTROLLER_BASE_ADDRESS	0x3F000000
-#define configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET	0x00001000
-#define configUNIQUE_INTERRUPT_PRIORITIES	32
 
 /* Software timer definitions. */
 #define configUSE_TIMERS			0
@@ -115,6 +110,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskSuspend			1
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay			1
+#define INCLUDE_xTaskGetCurrentTaskHandle       0
 #define INCLUDE_xTimerPendFunctionCall		0
 #define INCLUDE_eTaskGetState			0
 #define INCLUDE_xTaskAbortDelay			0
@@ -130,7 +126,7 @@ FreeRTOS/Source/tasks.c for limitations. */
 /* Run time stats are not generated.  portCONFIGURE_TIMER_FOR_RUN_TIME_STATS and
 portGET_RUN_TIME_COUNTER_VALUE must be defined if configGENERATE_RUN_TIME_STATS
 is set to 1. */
-#define configGENERATE_RUN_TIME_STATS 0
+#define configGENERATE_RUN_TIME_STATS 		0
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
 #define portGET_RUN_TIME_COUNTER_VALUE()
 
@@ -139,10 +135,11 @@ are multiple command interpreters running at once (for example, one on a UART
 and one on TCP/IP).  This is done to prevent an output buffer being defined by
 each implementation - which would waste RAM.  In this case, there is only one
 command interpreter running. */
-#define configCOMMAND_INT_MAX_OUTPUT_SIZE 2096
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE 	2096
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
+#define	configASSERT_DEFINED 1
 void vMainAssertCalled( const char *pcFileName, uint32_t ulLineNumber );
 #define configASSERT( x ) if( ( x ) == 0 ) { vMainAssertCalled( __FILE__, __LINE__ ); }
 
@@ -151,8 +148,7 @@ return from its implementing function will end up in a "task exit error"
 function - which contains a call to configASSERT().  However this can give GCC
 some problems when it tries to unwind the stack, as the exit error function has
 nothing to return to.  To avoid this define configTASK_RETURN_ADDRESS to 0.  */
-//#define configTASK_RETURN_ADDRESS	NULL
-#define configTASK_RETURN_ADDRESS	0
+#define configTASK_RETURN_ADDRESS		NULL
 
 /* Bump up the priority of recmuCONTROLLING_TASK_PRIORITY to prevent false
 positive errors being reported considering the priority of other tasks in the
@@ -173,8 +169,6 @@ void vSetupTickInterrupt( void );
 #define configSETUP_TICK_INTERRUPT() vSetupTickInterrupt()
 void vClearTickInterrupt( void );
 #define configCLEAR_TICK_INTERRUPT() vClearTickInterrupt()
-
-#define fabs( x ) __builtin_fabs( x )
 
 #define configUSE_TRACE_FACILITY		0
 
