@@ -86,7 +86,7 @@ void *memcpy(void *dest, const void *src, size_t count)
                 return dest;
 
         /* while all data is aligned (common case), copy a word at a time */
-        if ( (((ulong)dest | (ulong)src) & (sizeof(*dl) - 1)) == 0) {
+        if ( (((unsigned long)dest | (unsigned long)src) & (sizeof(*dl) - 1)) == 0) {
                 while (count >= sizeof(*dl)) {
                         *dl++ = *sl++;
                         count -= sizeof(*dl);
@@ -110,7 +110,7 @@ void *memset(void * s,int c,size_t count)
         int i;
 
         /* do it one word at a time (32 bits or 64 bits) while possible */
-        if ( ((ulong)s & (sizeof(*sl) - 1)) == 0) {
+        if ( ((unsigned long)s & (sizeof(*sl) - 1)) == 0) {
                 for (i = 0; i < sizeof(*sl); i++) {
                         cl <<= 8;
                         cl |= c & 0xff;

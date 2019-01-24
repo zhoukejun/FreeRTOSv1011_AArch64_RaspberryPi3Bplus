@@ -1,4 +1,4 @@
-ARMGNU ?= aarch64-linux-gnu
+ARMGNU ?= aarch64-elf
 INCLUDEPATH1 ?= Source/include 
 INCLUDEPATH2 ?= Source/portable/GCC/ARM_CA53_64_BIT_NO_GIC
 INCLUDEPATH3 ?= Demo/CORTEX_A53_64-bit_BCM2837B0
