@@ -16,35 +16,37 @@ config.txt is showing below.
 
 ====================
 
-# ARMv8
-arm_control=0x200
+ # ARMv8
+ arm_control=0x200
 
-# Uart
-enable_uart=1
+ # Uart
+ enable_uart=1
 
-# 1: Load at address 0x0
-# 0: Load at address 0x80000
-kernel_old=1
+ # 1: Load at address 0x0
+ # 0: Load at address 0x80000
+ kernel_old=1
 
-# Kernel name
-kernel=kernel.img
+ # Kernel name
+ kernel=kernel.img
 
 ====================
 
 5. You need to connect the RaspberryPi 3B+ mini UART port to your PC. UART setting is showing below
 
 ===============================
-set line /dev/ttyUSB0 
 
-set speed 115200 
+ set line /dev/ttyUSB0 
 
-set carrier-watch off 
+ set speed 115200 
 
-set flow-control none 
+ set carrier-watch off 
 
-set prefixing all
+ set flow-control none 
 
-set streaming off
+ set prefixing all
 
-set parity none
+ set streaming off
+
+ set parity none
+
 ===============================
