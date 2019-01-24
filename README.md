@@ -20,13 +20,18 @@ config.txt is showing below.
  arm_control=0x200
 
  #Uart
+ 
  enable_uart=1
+ 
 
  #1: Load at address 0x0
+ 
  #0: Load at address 0x80000
+ 
  kernel_old=1
 
  #Kernel name
+ 
  kernel=kernel.img
 
 ====================
