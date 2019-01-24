@@ -32,34 +32,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#ifndef configINTERRUPT_CONTROLLER_BASE_ADDRESS
-	#error configINTERRUPT_CONTROLLER_BASE_ADDRESS must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
-#endif
-
-#ifndef configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET
-	#error configINTERRUPT_CONTROLLER_CPU_INTERFACE_OFFSET must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
-#endif
-
-#ifndef configUNIQUE_INTERRUPT_PRIORITIES
-	#error configUNIQUE_INTERRUPT_PRIORITIES must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
-#endif
-
-#ifndef configSETUP_TICK_INTERRUPT
-	#error configSETUP_TICK_INTERRUPT() must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
-#endif /* configSETUP_TICK_INTERRUPT */
-
-#ifndef configMAX_API_CALL_INTERRUPT_PRIORITY
-	#error configMAX_API_CALL_INTERRUPT_PRIORITY must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
-#endif
-
-#if configMAX_API_CALL_INTERRUPT_PRIORITY == 0
-	#error configMAX_API_CALL_INTERRUPT_PRIORITY must not be set to 0
-#endif
-
-#if configMAX_API_CALL_INTERRUPT_PRIORITY > configUNIQUE_INTERRUPT_PRIORITIES
-	#error configMAX_API_CALL_INTERRUPT_PRIORITY must be less than or equal to configUNIQUE_INTERRUPT_PRIORITIES as the lower the numeric priority value the higher the logical interrupt priority
-#endif
-
 #if configUSE_PORT_OPTIMISED_TASK_SELECTION == 1
 	/* Check the configuration. */
 	#if( configMAX_PRIORITIES > 32 )
@@ -67,24 +39,20 @@
 	#endif
 #endif /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
 
-/* In case security extensions are implemented. */
-#if configMAX_API_CALL_INTERRUPT_PRIORITY <= ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
-	#error configMAX_API_CALL_INTERRUPT_PRIORITY must be greater than ( configUNIQUE_INTERRUPT_PRIORITIES / 2 )
-#endif
+#ifndef configSETUP_TICK_INTERRUPT
+	#error configSETUP_TICK_INTERRUPT() must be defined.  See http://www.freertos.org/Using-FreeRTOS-on-Cortex-A-Embedded-Processors.html
+#endif /* configSETUP_TICK_INTERRUPT */
+
 
 /* Some vendor specific files default configCLEAR_TICK_INTERRUPT() in
 portmacro.h. */
 #ifndef configCLEAR_TICK_INTERRUPT
-	#define configCLEAR_TICK_INTERRUPT()
+	#error configCLEAR_TICK_INTERRUPT() must be defined.
 #endif
 
 /* A critical section is exited when the critical section nesting count reaches
 this value. */
 #define portNO_CRITICAL_NESTING			( ( size_t ) 0 )
-
-/* In all GICs 255 can be written to the priority mask register to unmask all
-(but the lowest) interrupt priority. */
-#define portUNMASK_VALUE				( 0xFFUL )
 
 /* Tasks are not created with a floating point context, but can be given a
 floating point context after they have been created.  A variable is stored as
@@ -106,13 +74,8 @@ context. */
 	#define portINITIAL_PSTATE	( portEL3 | portSP_EL0 )
 #endif
 
-
-/* Used by portASSERT_IF_INTERRUPT_PRIORITY_INVALID() when ensuring the binary
-point is zero. */
-#define portBINARY_POINT_BITS			( ( uint8_t ) 0x03 )
-
 /* Masks all bits in the APSR other than the mode bits. */
-#define portAPSR_MODE_BITS_MASK			( 0x0C )
+#define portAPSR_MODE_BITS_MASK		( 0x0C )
 
 /* Let the user override the pre-loading of the initial LR with the address of
 prvTaskExitError() in case it messes up unwinding of the stack in the
@@ -147,15 +110,19 @@ volatile uint64_t ullCriticalNesting = 9999ULL;
 
 /* Saved as part of the task context.  If ullPortTaskHasFPUContext is non-zero
 then floating point context must be saved and restored for the task. */
-uint64_t ullPortTaskHasFPUContext = pdFALSE;
+volatile uint64_t ullPortTaskHasFPUContext = pdFALSE;
 
 /* Set to 1 to pend a context switch from an ISR. */
-uint64_t ullPortYieldRequired = pdFALSE;
+volatile uint64_t ullPortYieldRequired = pdFALSE;
 
 /* Counts the interrupt nesting depth.  A context switch is only performed if
 if the nesting depth is 0. */
-uint64_t ullPortInterruptNesting = 0;
+volatile uint64_t ullPortInterruptNesting = 0;
 
+/* The old tskTCB name is maintained above then typedefed to the new TCB_t name
+below to enable the use of older kernel aware debuggers. */
+typedef tskTCB TCB_t;
+extern PRIVILEGED_DATA TCB_t * volatile pxCurrentTCB;
 /*-----------------------------------------------------------*/
 
 /*
@@ -233,7 +200,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	*pxTopOfStack = ( StackType_t ) 0x00;	/* R30 - procedure call link register. */
 	pxTopOfStack--;
 
-	*pxTopOfStack = portINITIAL_PSTATE;
+	*pxTopOfStack = ( StackType_t ) portINITIAL_PSTATE;
 	pxTopOfStack--;
 
 	*pxTopOfStack = ( StackType_t ) pxCode; /* Exception return address. */
@@ -242,6 +209,12 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	/* The task will start with a critical nesting count of 0 as interrupts are
 	enabled. */
 	*pxTopOfStack = portNO_CRITICAL_NESTING;
+	pxTopOfStack--;
+
+	/* The task will start without a floating point context.  A task that uses
+	the floating point hardware must call vPortTaskUsesFPU() before executing
+	any floating point instructions. */
+	*pxTopOfStack = portNO_FLOATING_POINT_CONTEXT;
 
 	return pxTopOfStack;
 }
@@ -249,7 +222,6 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 
 static void prvTaskExitError( void )
 {
-	print("prvTaskExitError()");
 	/* A function that implements a task must not exit or attempt to return to
 	its caller as there is nothing to return to.  If a task wants to exit it
 	should instead call vTaskDelete( NULL ).
@@ -286,12 +258,9 @@ BaseType_t xPortStartScheduler( void )
 
 		/* Start the timer that generates the tick ISR. */
 		configSETUP_TICK_INTERRUPT();
-
-		/* Start the first task executing. */
 		vPortRestoreTaskContext();
 	}
 
-	print("xPortStartScheduler() Error----------");
 	/* Will only get here if vTaskStartScheduler() was called with the CPU in
 	a non-privileged mode or the binary point register was not set to its lowest
 	possible value.  prvTaskExitError() is referenced to prevent a compiler
@@ -333,6 +302,7 @@ void vPortEnterCritical( void )
 
 void vPortExitCritical( void )
 {
+
 	if( ullCriticalNesting > portNO_CRITICAL_NESTING )
 	{
 		/* Decrement the nesting count as the critical section is being
@@ -346,6 +316,8 @@ void vPortExitCritical( void )
 			/* Critical nesting has reached zero so all interrupt priorities
 			should be unmasked. */
 			portENABLE_INTERRUPTS();
+
+
 		}
 	}
 }
@@ -353,19 +325,27 @@ void vPortExitCritical( void )
 
 void FreeRTOS_Tick_Handler( void )
 {
-	uint32_t ulInterruptStatus;
+	/* Interrupts should not be enabled before this point. */
+#if( configASSERT_DEFINED == 1 )
+	{
+		uint32_t ulMaskBits;
 
-	ulInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
+		__asm volatile( "mrs %0, daif" : "=r"( ulMaskBits ) :: "memory" );
+		configASSERT( ( ulMaskBits & portDAIF_I ) != 0 );
+	}
+#endif /* configASSERT_DEFINED */
 
+	configCLEAR_TICK_INTERRUPT();
 	/* Increment the RTOS tick. */
 	if( xTaskIncrementTick() != pdFALSE )
 	{
 		ullPortYieldRequired = pdTRUE;
+		__asm volatile ( "DSB SY" );		\
+		__asm volatile ( "ISB SY" );
 	}
+	/* Ok to enable interrupts after the interrupt source has been cleared. */
+	portENABLE_INTERRUPTS();
 
-	portCLEAR_INTERRUPT_MASK_FROM_ISR( ulInterruptStatus );
-
-	configCLEAR_TICK_INTERRUPT();
 }
 
 
