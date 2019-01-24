@@ -119,10 +119,6 @@ volatile uint64_t ullPortYieldRequired = pdFALSE;
 if the nesting depth is 0. */
 volatile uint64_t ullPortInterruptNesting = 0;
 
-/* The old tskTCB name is maintained above then typedefed to the new TCB_t name
-below to enable the use of older kernel aware debuggers. */
-typedef tskTCB TCB_t;
-extern PRIVILEGED_DATA TCB_t * volatile pxCurrentTCB;
 /*-----------------------------------------------------------*/
 
 /*
