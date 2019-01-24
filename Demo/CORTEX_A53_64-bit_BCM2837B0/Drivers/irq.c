@@ -72,6 +72,7 @@ int bcm_peripherals_irq_disable(BCM_PERIPHERALS_INTERRUPT_T Int_Id)
 	if (Int_Id < 32)
 	{
 		iowrite32((0x1 << Int_Id), DISABLE_IRQ_1);
+		return 0;
 	}
 	else if (Int_Id < BCM_PERIPHERALS_INTERRUPT_TOTAL)	
 	{
@@ -150,8 +151,9 @@ void bcm_irq_Handler(void)
 			pHandler();
 		}
 	}
+
 	// Bit 8 in IRQ_BASSIC_PENDING indicates interrupts in Pending1 (interrupts 31-0):
-	else if (ulBasicPendingStatus & (1UL << 8))
+	if (ulBasicPendingStatus & (1UL << 8))
 	{
 		// Check the Peripherals Pending1 register is enough. No provision to check the Peripheral Interrupt Enable register 1.
 		uint32_t ulPerPending_1 = ioread32(IRQ_PENDING_1);
@@ -165,7 +167,7 @@ void bcm_irq_Handler(void)
 		}
 	}
 	// Bit 9 in IRQ_BASIC_PENDING indicates interrupts in Pending2 (interrupts 63-32):
-	else if (ulBasicPendingStatus & (1UL << 9))
+	if (ulBasicPendingStatus & (1UL << 9))
 	{
 		// Check the Peripherals Pending2 register is enough. No provision to check the Peripheral Interrupt Enable register 2.
 		uint32_t ulPerPending_2 = ioread32(IRQ_PENDING_2);
@@ -177,8 +179,9 @@ void bcm_irq_Handler(void)
 			pHandler(Int_Id, pParam);
 		}
 	}
+
 	// Bits 20 ~ 10 in IRQ_BASIC_PENDING indicate GPU IRQs:
-	else if (ulBasicPendingStatus & 0x1FFC00)
+	if (ulBasicPendingStatus & 0x1FFC00)
 	{
 		/* GPU IRQs */
 		return;
