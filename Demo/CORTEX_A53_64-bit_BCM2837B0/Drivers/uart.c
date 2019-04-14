@@ -87,9 +87,10 @@ void bcm_uart_init ( void )
 	iowrite32(0, GPPUD);
 	for(ra = 0; ra < 150; ra++)
 		asm volatile ("nop");
-	iowrite32((2 << 14) | (2 << 15), GPPUDCLK0);
+	iowrite32((1 << 14) | (1 << 15), GPPUDCLK0);
 	for(ra = 0; ra < 150; ra++)
 		asm volatile ("nop");
+	iowrite32(0, GPPUD);
 	iowrite32(0, GPPUDCLK0);
 	iowrite32(3, AUX_MU_CNTL_REG);
 }
